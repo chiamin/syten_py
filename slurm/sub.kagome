@@ -1,0 +1,39 @@
+#!/bin/bash
+
+INPUT=$1
+wdir=$PWD
+JOBTEMP=~/sh/job_template
+JOBSH=~/sh/job_run
+JOBNAME="$(echo $INPUT | sed 's/.in//g')"
+OUTNAME="$(echo $INPUT | sed 's/.in/.out/g')"
+EXE=/project/thcluster/c/ChiaMin.Chung/kagome/down_triangles/dmrg.exe
+
+cp $JOBTEMP $JOBSH
+
+CPUS=8
+# SLURM variables
+sed -i '/--job-name=/c\'"#SBATCH --job-name=$JOBNAME" $JOBSH
+sed -i '/--cpus-per-task/c\'"#SBATCH --cpus-per-task=$CPUS" $JOBSH
+sed -i '/--partition=/c\#SBATCH --partition=TH-WS,TH-CL' $JOBSH
+sed -i '/--time=/c\#SBATCH --time=96:00:00' $JOBSH
+
+# User variables
+varlines=$varlines"\    input=$INPUT\n"
+varlines=$varlines"\    output=$OUTNAME\n"
+sed -i "/# Define variables/a$varlines" $JOBSH
+
+# Pre process
+prelines=$prelines"\    "'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/project/theorie/c/C.Hubig/boost/v1_60/lib'"\n"
+sed -i "/# Pre process/a$prelines" $JOBSH
+
+# Executive lines
+submitdir='$SLURM_SUBMIT_DIR'
+exelines=$exelines"\    cp $submitdir/$INPUT ./\n"
+exelines=$exelines"\    $EXE $INPUT >> $submitdir/$OUTNAME\n" 
+sed -i "/# Execution/a$exelines" $JOBSH
+
+# After job finished
+aftlines=$afterline'\    rm -r $scratch/PH_*'
+sed -i "/# After finish/a$aftlines" $JOBSH
+
+sbatch $JOBSH

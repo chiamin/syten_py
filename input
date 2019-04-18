@@ -1,0 +1,55 @@
+name     = hub16x6_U8_6h
+lx       = 16
+ly       = 1
+U        = 8
+mu       = 0
+Npar     = 15
+Stot     = 0
+symm     = su2
+dmrgtype = DMRG3S
+
+readState
+{
+    dir = dir
+    lattice = hub16x6_U8_6h_16x1_su2.lat
+    state = hub16x6_U8_6h_16x1_su2_1_20.state
+}
+
+initState
+{
+    type = vertical_stripes
+    hx = 1
+    hy = 1
+}
+
+sweeps
+{
+    m         Nswp  maxIter  cutoff    subSpaceExpen    dmrg
+    4         10   10       1e-10     40                
+    8         10   10       1e-10     40                
+}
+
+localmuh
+{
+    x   y   mu      h
+    5   1   -2      0
+    5   2   -2      0
+    5   3   -2      0
+    5   4   -2      0
+    5   5   -2      0
+    5   6   -2      0
+    12  1   -2      0
+    12  2   -2      0
+    12  3   -2      0
+    12  4   -2      0
+    12  5   -2      0
+    12  6   -2      0
+}
+
+
+workdir = .
+outdir = dir/
+cpus_dense = 1
+cpus_tensor = 1
+cpus_super = 1
+writeM = 1048576

@@ -1,0 +1,94 @@
+#!/bin/bash
+
+INPUT=$1
+wdir=$PWD
+JOBTEMP=~/sh/job_template
+JOBSH=~/sh/job_run
+
+shift
+OUTNAME="$(echo $INPUT | sed 's/.in/.out/g')"
+JOBNAME="$(echo $INPUT | sed 's/.in//g')"
+ERRNAME="$(echo $INPUT | sed 's/.in/.err/g')"
+SYTENFLAGS=''
+
+while [[ $# -gt 0 ]]
+do
+key="$1"
+case $key in
+    -o|--outname)
+    OUTNAME="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -j|--jobname)
+    JOBNAME="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -cplx|--complex)
+    SYTENFLAGS="$SYTENFLAGS -cplx "
+    shift
+    ;;
+    -gc|--grand_canonical)
+    SYTENFLAGS="$SYTENFLAGS -gc "
+    shift
+    ;;
+    --default)
+    shift
+    ;;
+    *)
+            # unknown option
+    shift
+    ;;
+esac
+done
+
+# Get number of cpus
+Get_variable ()
+{
+    key=$1
+    str=$(grep $key $INPUT)
+    IFS='='
+    tmp=( $str )
+    re=${tmp[1]}
+}
+Get_variable cpus_dense;  cpus1=$re;
+Get_variable cpus_tensor; cpus2=$re;
+Get_variable cpus_super;  cpus3=$re;
+CPUS=$(( $cpus1*$cpus2*$cpus3 ))
+
+#---------------------------------------------
+cp $JOBTEMP $JOBSH
+
+sed -i '/outdir/c\outdir = '"$wdir" $INPUT
+sed -i -e "s|pwd|$wdir|g" $INPUT
+
+# SLURM variables
+sed -i '/--job-name=/c\'"#SBATCH --job-name=$JOBNAME" $JOBSH
+sed -i '/--cpus-per-task/c\'"#SBATCH --cpus-per-task=$CPUS" $JOBSH
+sed -i '/--partition=/c\#SBATCH --partition=TH-CL' $JOBSH
+#sed -i '/--constraint=/c\#SBATCH --constraint=AVX2' $JOBSH
+#sed -i '/--constraint=/c\#SBATCH --constraint=' $JOBSH
+
+# User variables
+varlines=$varlines"\    input=$INPUT\n"
+varlines=$varlines"\    output=$OUTNAME\n"
+sed -i "/# Define variables/a$varlines" $JOBSH
+
+# Pre process
+prelines=$prelines'cat $input >> $SLURM_SUBMIT_DIR/$output'"\n"
+sed -i "/# Pre process/a$prelines" $JOBSH
+
+# Executive lines
+sytenpydir=$SYTENPYDIR
+#exelines=$exelines"\    source $sytendir/envvars.source\n"
+exelines=$exelines"\    "'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/project/theorie/c/C.Hubig/boost/v1_60/lib'"\n"
+exelines=$exelines"\    srun $envdir python $sytenpydir/dmrg.py $INPUT $SYTENFLAGS 2>> "'$SLURM_SUBMIT_DIR/'"$ERRNAME 1>> "'$SLURM_SUBMIT_DIR/'"$OUTNAME\n"
+exelines=$exelines"\    srun $envdir python $sytenpydir/measall.py $INPUT $SYTENFLAGS -odir "'$SLURM_SUBMIT_DIR 2>> "'$SLURM_SUBMIT_DIR/'"$ERRNAME 1>> $SLURM_SUBMIT_DIR/'"$OUTNAME\n"
+sed -i "/# Execution/a$exelines" $JOBSH
+
+# After job finished
+aftlines=$afterline'\    rm $scratch/$SLURM_JOB_ID/*.cache'
+sed -i "/# After finish/a$aftlines" $JOBSH
+
+sbatch $JOBSH

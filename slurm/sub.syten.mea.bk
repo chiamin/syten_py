@@ -1,0 +1,56 @@
+#!/bin/bash
+
+input=$1
+wdir=$PWD
+JOBSH=~/sh/job.general
+exe='"python /project/thcluster/c/ChiaMin.Chung//mypy/sytendmrg/measall.py"'
+
+shift
+OUTNAME="$(echo $input | sed 's/.in/.mea/g')"
+JOBNAME=$OUTNAME
+
+while [[ $# -gt 1 ]]
+do
+key="$1"
+case $key in
+    -o|--outname)
+    OUTNAME="$2"
+    shift # past argument
+    ;;
+    -j|--jobname)
+    JOBNAME="$2"
+    shift # past argument
+    ;;
+    --default)
+    ;;
+    *)
+            # unknown option
+    ;;
+esac
+shift # past argument or value
+done
+
+Get_variable ()
+{
+    key=$1
+    str=$(grep $key $input)
+    IFS='='
+    tmp=( $str )
+    re=${tmp[1]}
+}
+Get_variable cpus_dense;  cpus1=$re;
+Get_variable cpus_tensor; cpus2=$re;
+Get_variable cpus_super;  cpus3=$re;
+CPUS=$(( $cpus1*$cpus2*$cpus3 ))
+
+sed -i '/workdir/c\workdir = '"$wdir" $input
+
+sed -i '/EXE=/c\'"EXE=$exe" $JOBSH
+sed -i '/--job-name=/c\'"#SBATCH --job-name=$JOBNAME" $JOBSH
+sed -i '/INPUT=/c\'"INPUT=$input" $JOBSH
+sed -i '/OUTPUT=/c\'"OUTPUT=$OUTNAME" $JOBSH
+sed -i '/--cpus-per-task/c\'"#SBATCH --cpus-per-task=$CPUS" $JOBSH
+sed -i '/--partition=/c\#SBATCH --partition=TH-WS,TH-CL' $JOBSH
+sed -i '/--constraint=/c\#SBATCH --constraint=' $JOBSH
+
+sbatch $JOBSH

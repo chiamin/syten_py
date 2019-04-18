@@ -1,0 +1,48 @@
+#!/bin/bash
+
+INPUT=$1
+wdir=$PWD
+JOBTEMP=~/sh/job_template
+JOBSH=~/sh/job_run
+JOBNAME=$INPUT
+OUTNAME=$INPUT.out
+
+cp $JOBTEMP $JOBSH
+
+CPUS_DENSE=1 #$(findnext.sh --threads-dense $INPUT)
+CPUS_TENSOR=1 #$(findnext.sh --threads-tensor $INPUT)
+CPUS_SUPER=1 #$(findnext.sh --threads-super $INPUT)
+CPUS=$(( $CPUS_DENSE*$CPUS_TENSOR*$CPUS_SUPER ))
+
+# SLURM variables
+sed -i '/--job-name=/c\'"#SBATCH --job-name=$JOBNAME" $JOBSH
+sed -i '/--cpus-per-task/c\'"#SBATCH --cpus-per-task=$CPUS" $JOBSH
+sed -i '/--partition=/c\#SBATCH --partition=TH-CL,TH-WS' $JOBSH
+#sed -i '/--constraint=/c\#SBATCH --constraint=AVX2' $JOBSH
+sed -i '/--time=/c\#SBATCH --time=96:00:00' $JOBSH
+
+# User variables
+varlines=$varlines"\    input=$INPUT\n"
+varlines=$varlines"\    output=$OUTNAME\n"
+sed -i "/# Define variables/a$varlines" $JOBSH
+
+# Pre process
+prelines=$prelines"\    "'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/project/theorie/c/C.Hubig/boost/v1_60/lib'"\n"
+sed -i "/# Pre process/a$prelines" $JOBSH
+
+# Executive lines
+SUBMITDIR='$SLURM_SUBMIT_DIR'
+LATT=$(findnext.sh -l $INPUT)
+PAIRTMP=$(findnext.sh --template-file $INPUT)
+exelines=$exelines"\    cp $SUBMITDIR/$INPUT ./\n"
+exelines=$exelines"\    cp $SUBMITDIR/$LATT ./\n"
+exelines=$exelines"\    cp $SUBMITDIR/$PAIRTMP ./\n"
+exelines=$exelines"\    chmod +x $INPUT ./\n"
+exelines=$exelines"\    ./$INPUT >> $SUBMITDIR/$OUTNAME\n" 
+sed -i "/# Execution/a$exelines" $JOBSH
+
+# After job finished
+aftlines=$afterline'\    rm $scratch/*.cache'
+sed -i "/# After finish/a$aftlines" $JOBSH
+
+sbatch $JOBSH

@@ -1,0 +1,61 @@
+#!/bin/bash
+#SBATCH --job-name=test16x6.mea
+#SBATCH --partition=TH-CL,TH-WS
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=14
+#SBATCH --mem-per-cpu=3Gb
+#SBATCH --threads-per-core=1
+#SBATCH --begin=now
+#SBATCH --time=240:00:00
+#SBATCH --mail-user=chiamin.chung@lmu.de
+#SBATCH --no-requeue
+#SBATCH --constraint=
+#SBATCH -w, --nodelist=th-cl-hua24
+
+scratch=/data/ChiaMin.Chung
+
+slurm_startjob()
+{
+    # Define variables
+    input=test16x6_exp500.in
+    output=test16x6_exp500.mea
+
+
+    # Go to scratch
+    mkdir -p $scratch/$SLURM_JOB_ID/BLKMAT
+    cp $input /data/ChiaMin.Chung/726918
+    cd /data/ChiaMin.Chung/726918
+
+    # Print info
+    cat $0 >> $SLURM_SUBMIT_DIR/$output
+    slurm_info_out >> $SLURM_SUBMIT_DIR/$output
+
+    # Execution
+    source /project/thcluster/c/ChiaMin.Chung/syten//envvars.source
+    srun time env SYTENDIR=/project/thcluster/c/ChiaMin.Chung/syten/ SYTEN_MEMORY_SAMPLER=$SLURM_SUBMIT_DIR/$output.mem python /project/thcluster/c/ChiaMin.Chung/mypy/sytendmrg//measall.py $input -odir $SLURM_SUBMIT_DIR >> $SLURM_SUBMIT_DIR/$output 2>&1
+
+
+    # After finish
+    rm /data/ChiaMin.Chung/726918/*.cache
+    echo Job Done
+}
+
+slurm_info_out()
+{
+    echo "----- Job Information -----"
+    date
+    echo
+    echo "The job will be started on the following node(s):"
+    echo $SLURM_JOB_NODELIST
+    echo
+    echo "Slurm User:         $SLURM_JOB_USER"
+    echo "Run Directory:      $SLURM_JOB_NODELIST:$(pwd)"
+    echo "Job ID:             $SLURM_JOB_ID"
+    echo "Submitted From:     $SLURM_SUBMIT_HOST:$SLURM_SUBMIT_DIR"
+    echo "---------------------------"
+    echo
+}
+
+slurm_info_out
+slurm_startjob
