@@ -168,6 +168,23 @@ def localmuh (fname):
 
     return gen_H_localmuh (xymuh,lx,ly)
 
+def global_dwave_pairing_terms (lx,ly,delta,xpbc=False,ypbc=True):
+    dels = []
+    for y in xrange(1,ly+1):
+        for x in xrange(1,lx+1):
+            # horizontal bonds
+            if x != lx:
+                dels.append ([x,y,x+1,y,delta])
+            # vertical bonds
+            if y == ly:
+                if ypbc:
+                    y2 = 1
+                    dels.append ([x,y,x,y2,-delta])
+            else:
+                y2 = y+1
+                dels.append ([x,y,x,y2,-delta])
+    return dels
+
 def pairing_terms (fname):
 
     lx,ly = read_para (fname, ('lx','ly'), int, '=')
@@ -180,7 +197,11 @@ def pairing_terms (fname):
         raise Exception
 
     if 'type' in para:
-        return ''
+        if para['type'] == 'dwave':
+            x1y1x2y2D = global_dwave_pairing_terms (lx,ly,para['delta'])
+        else:
+            return ''
     else:
         x1y1x2y2D = read_block_terms (fname, 'pairing_potential', ('x1','y1','x2','y2','D'))
+
     return gen_H_pairing (x1y1x2y2D,lx,ly)

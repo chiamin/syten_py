@@ -107,6 +107,7 @@ def read_block (fname, blockname, sp='='):
         tmp = line.split ('=')
         if len(tmp) == 2:
             para[tmp[0].strip()] = to_var_or_list (tmp[1])
+    return para
 
 def read_block_terms (fname, blockname, keys):
     f = open(fname)
@@ -119,6 +120,7 @@ def read_block_terms (fname, blockname, keys):
         if '}' in line: return para
         tmp = line.split()
         para.append (map(to_float_or_int_or_str,tmp))
+    return para
 
 def read_Npar (fname):
     lx,ly = read_para (fname, ('lx','ly'), int, '=')
