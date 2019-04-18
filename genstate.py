@@ -111,7 +111,7 @@ def gen_init (typ, lines, lx, ly, Npar, symm):
     init = []
     if typ == 'vertical_stripes':
 
-        if symm != 'su2' and symm != 'su2gc':
+        if symm != 'su2':
             print 'Error: symmetry',symm,'not yet support'
             raise Exception
 
