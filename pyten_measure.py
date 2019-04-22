@@ -187,6 +187,7 @@ def compute_expectations (indss, mpos, mps, cache_threshold=1048576,threads_tens
 
     vals = []
     for inds, mpo in zip(indss, mpos):
+        print ('working on indices:',*inds)
         ibeg = min(inds)
         iend = max(inds)
 
