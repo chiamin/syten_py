@@ -105,7 +105,6 @@ def push_L_right (L, iL, i, mpo, mps):
 def compute_expectation (L, iL, iend, mpo, mps):
 # will NOT change L outside
     for j in range(iL,iend+1):
-        #print ('j=',j)
         L = calc_contr_l (L, mpo[j], mps.get_const(j))
     R = gen_right_dummy (mpo, mps, iend)
     val = p.tensor.prod([1,2,3], L, R, False).real
