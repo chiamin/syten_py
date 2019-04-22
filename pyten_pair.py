@@ -51,9 +51,11 @@ if __name__ == '__main__':
     psi_file = get_argv('psi')
     out_file = get_argv('out',default=psi_file+'.pair')
     print (out_file)
-    threads_tensor = get_argv('threads-tensor',int,1)
-    threads_dense = get_argv('threads-dense',int,1)
+    threads_tensor = get_argv('threads_tensor',int,1)
+    threads_dense = get_argv('threads_dense',int,1)
     cache_threshold=10485760
+
+    print ('threads_tensor',threads_tensor)
 
     print ('Loading lattice',lat_file)
     lat = p.mp.Lattice (lat_file)
