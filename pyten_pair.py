@@ -49,6 +49,7 @@ if __name__ == '__main__':
     cache_threshold = get_argv('cache-threshold',int,1048576)
     lat_file = get_argv('lat')
     psi_file = get_argv('psi')
+    out_file = get_argv('out',psi_file+'.pair')
     threads_tensor = get_argv('threads-tensor',int,1)
     threads_dense = get_argv('threads-dense',int,1)
     cache_threshold=10485760
@@ -65,7 +66,6 @@ if __name__ == '__main__':
 
     vals = mea.compute_expectations (indss, mpos, mps, cache_threshold,threads_tensor,threads_dense)
 
-    out_file = psi_file+'.pair'
     with open(out_file,'w') as f:
         print ('x1 y1 x2 y2 delta', file=f)
         for inds,val in zip(indss,vals):
