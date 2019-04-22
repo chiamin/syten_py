@@ -49,7 +49,8 @@ if __name__ == '__main__':
     cache_threshold = get_argv('cache-threshold',int,1048576)
     lat_file = get_argv('lat')
     psi_file = get_argv('psi')
-    out_file = get_argv('out',psi_file+'.pair')
+    out_file = get_argv('out',default=psi_file+'.pair')
+    print (out_file)
     threads_tensor = get_argv('threads-tensor',int,1)
     threads_dense = get_argv('threads-dense',int,1)
     cache_threshold=10485760
