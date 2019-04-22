@@ -1,0 +1,38 @@
+#!/bin/bash
+
+wdir=$PWD
+
+if [ "$#" -ne 2 ]; then
+    echo "Need two parameters: 1) lattice file 2) mps file"
+    exit
+fi
+
+exe="python3 $SYTENPYDIR/pyten_pair.py"
+sub=/mnt/home/chiaminchung/.local/bin/sub.general
+LATT="$1"
+PSI="$2"
+JOBTEMP=~/sub/job.general
+JOBSH=~/sub/job.tmp2
+CPUS_tensor=20
+CPUS_dense=1
+JOBNAME="pair.$PSI"
+OUTNAME="$JOBNAME.out"
+ERRNAME="$JOBNAME.err"
+
+exe="$exe lat=$wdir/$LATT psi=$wdir/$PSI out=$wdir/$PSI.pair"
+exe="$exe threads_tensor=$CPUS_tensor threads_dense=$CPUS_dense"
+CPUS=$(( $CPUS_tensor*$CPUS_dense ))
+
+cp $JOBTEMP $JOBSH
+
+sed -i '/cp $INPUT/c\' $JOBSH
+sed -i '/--job-name=/c\'"#SBATCH --job-name=$JOBNAME" $JOBSH
+sed -i '/--cpus-per-task/c\'"#SBATCH --cpus-per-task=$CPUS" $JOBSH
+sed -i '/--partition=/c\#SBATCH --partition=gen,ccq' $JOBSH
+sed -i '/--constraint=/c\#SBATCH --constraint=' $JOBSH
+
+aftlines=$afterline'\    rm $scratch/$SLURM_JOB_ID/*.cache'
+sed -i "/# After finish/a$aftlines" $JOBSH
+
+$sub "$exe" "$input" -jsc $JOBSH -j $JOBNAME -e $ERRNAME -o $OUTNAME
+

@@ -180,6 +180,9 @@ def compute_expectations (indss, mpos, mps, cache_threshold=1048576,threads_tens
     p.setCacheThreshold (cache_threshold)
     p.threading.setTensorNum (threads_tensor)
     p.threading.setDenseNum (threads_dense)
+    print ('cache_threshold =',cache_threshold)
+    print ('threads_tensor =',threads_tensor)
+    print ('threads_dense =',threads_dense)
 
     indss, mpos = sort_objs (indss, mpos)
     LE = LeftTensor (mpos[0], mps)

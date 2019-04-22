@@ -1,0 +1,40 @@
+#!/bin/bash
+
+wdir=$PWD
+
+exe="python2 $SYTENPYDIR/dmrg.py"
+sub=/mnt/home/chiaminchung/.local/bin/sub.general
+input=$1
+JOBTEMP=~/sub/job.general
+JOBSH=~/sub/job.tmp2
+
+cp $JOBTEMP $JOBSH
+
+# Get number of cpus
+Get_variable ()
+{
+    key=$1
+    str=$(grep $key $input)
+    re="$(echo $str | cut -d'=' -f2)"
+}
+Get_variable cpus_dense;  cpus1=$re;
+Get_variable cpus_tensor; cpus2=$re;
+Get_variable cpus_super;  cpus3=$re;
+CPUS=$(( $cpus1*$cpus2*$cpus3 ))
+
+sed -i '/outdir =/c\outdir = '"$wdir" $input
+sed -i '/workdir =/c\workdir = '"$wdir" $input
+
+sed -i '/--job-name=/c\'"#SBATCH --job-name=$JOBNAME" $JOBSH
+sed -i '/--cpus-per-task/c\'"#SBATCH --cpus-per-task=$CPUS" $JOBSH
+sed -i '/--partition=/c\#SBATCH --partition=gen,ccq' $JOBSH
+sed -i '/--constraint=/c\#SBATCH --constraint=skylake' $JOBSH
+
+prelines=$prelines'\    cat $input >> $SLURM_SUBMIT_DIR/$output'"\n"
+sed -i "/# Pre process/a$prelines" $JOBSH
+
+aftlines=$afterline'\    rm $scratch/$SLURM_JOB_ID/*.cache'
+sed -i "/# After finish/a$aftlines" $JOBSH
+
+$sub "$exe" "$input" -jsc $JOBSH
+

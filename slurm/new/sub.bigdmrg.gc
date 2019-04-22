@@ -1,0 +1,13 @@
+#!/bin/bash
+
+wdir=$PWD
+JOBSH=~/sub/job.run
+exe=/mnt/home/chiaminchung/dmrgwhite/stablerg/dmrggc
+sub=/mnt/home/chiaminchung/.local/bin/sub.general
+input=$1
+
+sed -i '/--cpus-per-task=/c\'"#SBATCH --cpus-per-task=40" $JOBSH
+sed -i '/--constraint=/c\'"#SBATCH --constraint=" $JOBSH
+
+$sub $exe $input
+

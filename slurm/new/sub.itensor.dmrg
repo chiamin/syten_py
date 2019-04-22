@@ -1,0 +1,12 @@
+#!/bin/bash
+
+wdir=$PWD
+
+exe=/mnt/home/chiaminchung/code/dmrg.itensor.gc/dmrg
+sub=/mnt/home/chiaminchung/.local/bin/sub.general
+input=$1
+
+sed -i '/outdir =/c\    outdir = '"$wdir" $input
+
+$sub $exe $input
+

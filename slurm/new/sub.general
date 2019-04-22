@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# $1: exe
+# $2: input (parameters) file
+# $3: options
+
+JOBTEMP=~/sub/job.general
+JOBSH=~/sub/job.run
+#exe=$(readlink -f $1)
+exe=$1
+shift
+inname=$1
+shift
+OUTNAME="$(echo $inname | sed 's/.in/.out/g')"
+JOBNAME="$(echo $inname | sed 's/.in//g')"
+ERRNAME="$(echo $inname | sed 's/.in/.err/g')"
+
+while [[ $# -gt 1 ]]
+do
+key="$1"
+
+case $key in
+    -o|--outname)
+    OUTNAME="$2"
+    shift # past argument
+    ;;
+    -j|--jobname)
+    JOBNAME="$2"
+    shift # past argument
+    ;;
+    -e|--errname)
+    ERRNAME="$2"
+    shift # past argument
+    ;;
+    -jsc|--jobscript)
+    JOBTEMP="$2"
+    shift # past argument
+    ;;
+    --default)
+    ;;
+    *)
+            # unknown option
+    ;;
+esac
+shift # past argument or value
+done
+
+echo $OUTNAME
+
+cp $JOBTEMP $JOBSH
+sed -i '/--job-name=/c\'"#SBATCH --job-name=$JOBNAME" $JOBSH
+sed -i '/INPUT=/c\INPUT='"$inname" $JOBSH
+sed -i '/OUTPUT=/c\OUTPUT='"$OUTNAME" $JOBSH
+sed -i '/ERROR=/c\ERROR='"$ERRNAME" $JOBSH
+sed -i '/EXE=/c\EXE='"\"$exe\"" $JOBSH
+
+sbatch $JOBSH
