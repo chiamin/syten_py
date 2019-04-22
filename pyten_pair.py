@@ -4,6 +4,7 @@ sys.path.append(pylib)
 import pyten as p
 import pyten_measure as mea
 import subprocess
+from utility import get_argv
 
 def get_print (command):
     return subprocess.check_output (command.split(), universal_newlines=True)
@@ -45,8 +46,12 @@ def print_pairing_terms (hps, fname=''):
         f.close()
 
 if __name__ == '__main__':
-    lat_file = sys.argv[1]
-    psi_file = sys.argv[2]
+    cache_threshold = get_argv('cache-threshold',int,1048576)
+    lat_file = get_argv('lat')
+    psi_file = get_argv('psi')
+    threads_tensor = get_argv('threads-tensor',int,1)
+    threads_dense = get_argv('threads-dense',int,1)
+    cache_threshold=10485760
 
     print ('Loading lattice',lat_file)
     lat = p.mp.Lattice (lat_file)
@@ -58,7 +63,7 @@ if __name__ == '__main__':
     hps = get_pairing_terms (lat_file)
     indss, mpos = gen_pairing_mpos (hps, lat)
 
-    vals = mea.compute_expectations (indss, mpos, mps)
+    vals = mea.compute_expectations (indss, mpos, mps, cache_threshold,threads_tensor,threads_dense)
 
     out_file = psi_file+'.pair'
     with open(out_file,'w') as f:
