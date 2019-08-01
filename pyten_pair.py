@@ -1,5 +1,5 @@
 import os, sys
-pylib = os.environ['SYTENDIRREAL']+'/pylib'
+pylib = os.environ['SYTENDIRREAL']+'/python_module'
 sys.path.append(pylib)
 import pyten as p
 import pyten_measure as mea

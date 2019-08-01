@@ -189,7 +189,7 @@ def pairing_terms (fname):
 
     lx,ly = read_para (fname, ('lx','ly'), int, '=')
     para = read_block (fname, 'pairing_potential')
-    if para == None: return ''
+    if len(para) == 0: return ''
 
     symm = read_para (fname, 'symm', str, '=')
     if symm != 'su2gc':
